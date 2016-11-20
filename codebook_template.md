@@ -1,5 +1,5 @@
 # Code Book
-
+link to markdown syntax https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#lists
 ## Information about the variables (including units!) in the data set raw / tidy
 
 Variable types are
