@@ -2,10 +2,10 @@
 ##  please consult the Code book and ReadMe document  to get insights
 ##  
 
- fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
- download.file(fileUrl,destfile="./RAW_Data.zip",method="curl")
-
-
+#  fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+#  download.file(fileUrl,destfile="./RAW_Data.zip",method="curl")
+# 
+# 
 ###Unzip DataSet to /data directory
  unzip(zipfile="./RAW_Data.zip",exdir="./")
 
