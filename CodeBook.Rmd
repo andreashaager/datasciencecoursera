@@ -1,0 +1,257 @@
+
+
+
+# Codebook
+###Coursera Course Data Analyst, Clean Data Week 4 Course Project
+
+##Information about the variables in the data set raw / tidy
+
+a full description of the raw data files can be found in the Readme.txt
+
+The below table shows all used variables in R. These variables are grouped by raw/tidy.
+
+r = raw variables are filled as described in section   
+        Getting Raw data 
+            1. Raw data is read into your current working directory by 
+            2. Reading files into the corresponding R tables 
+
+t0 - t1 = tidy0 to tidy1 are filled during transformation in section
+        Transformation steps to convert raw dataTable etc into Tidydata
+          These varaiables can be resized by columns numbers in () after * in dim
+        
+
+| variable  |Type   | Unit | raw/tidy  |dim   |Feature |
+|---|---|---|---|---|---|
+| dataSubTrain  |int   |   |  r| 7352 * 1  |num of person in Training|
+| dataSubTest  |int   |   |   r| 2947 * 1  |num of person in Test|
+| dataActTrain  |init  |   |   r| 7352 * 1  |num of Activity in Traing|
+| dataActTest  |init  |   |   r| 2947 * 1  |num of Activity in Test|
+| activityLables  |init, Factor 6 w/6 lev  |   |   | 6 * 2  |Text of activity num|
+| dataFeatures  |tbl_df  |   |  t0 | 561 * 2 |contains feature lables|
+| dataTrain  |tbl_df   |   |   r| 7352 * 561  |recorded dataset Training|
+| dataTest  | tbl_df  |   |   r| 2947 * 561  |recorded dataset Test|
+| alldataAct  |int   |   |  t0 | 10299 * 1  | <-dataActTrain & dataActTest|
+| alldataSub  |int   |   |  t0 | 10299 * 1  |<-dataSubTrain & dataSubTest|
+| dataTable  |tbl_df  |   |  t0 | 10299 * 561 (68) (69) |<-dataTrain & dataTest|
+| alldataSubAct  |tbl_df  |   |  t0 | 10299 * 2  |marix all Sub Act combinations|
+| dataFeatMeanStd |chr  |   |  t1 | 1 * 66 (68)  |union of subject activityNum only feature "mean\\(\\)|std\\(\\)" of dataFeatures $feature.Name|
+| data |tbl_df  |   |  t1 | 10299 * 69  |Subset of data Table by dataFeatMeanStd merged with activity name|
+| dataAgg  |tbl_df  |   |  t1 | 180 * 69  |data aggregated by using mean|
+| Tidydata  |tbl_df  |   |  t1 | 180 * 69  |dataAGG arranged by subject and activityname|
+
+# Getting the Raw data
+
+## 1.  Raw data is read into your current working directory by 
+> fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+> download.file(fileUrl,destfile="./RAW_Data.zip",method="curl")
+ 
+  File is unziped into the same directory without changing inherit path structure
+  
+
+> unzip(zipfile="./RAW_Data.zip",exdir="./")
+
+  loading the raw data files into R data tables is done by 
+   1. getting required packages
+
+
+ Load required packages
+ 
+ library(dplyr)
+ library(data.table)
+ library(tidyr)
+
+
+## 2. reading files into the corresponding R tables. filepath taken from path structure in Zip
+
+> filesPath <- "./UCI HAR Dataset"
+
+Read subject files
+
+> dataSubTrain <- tbl_df(read.table(file.path(filesPath, "train", "subject_train.txt")))
+> dataSubTest  <- tbl_df(read.table(file.path(filesPath, "test" , "subject_test.txt" )))
+
+
+Read activity files
+
+> dataActTrain <- tbl_df(read.table(file.path(filesPath, "train", "Y_train.txt")))
+> dataActTest  <- tbl_df(read.table(file.path(filesPath, "test" , "Y_test.txt" )))
+
+
+Read data files.
+
+> dataTrain <- tbl_df(read.table(file.path(filesPath, "train", "X_train.txt" )))
+> dataTest  <- tbl_df(read.table(file.path(filesPath, "test" , "X_test.txt" )))
+
+
+Read Data Features
+
+> dataFeatures <- tbl_df(read.table(file.path(filesPath, "features.txt")))
+
+features are later also needed to exclude unnecassary columns from the data 
+    (features is column lable of dataTrain, dataTest and the merged dataTable) 
+so they are again read into another R-table "dataFeatMeanStd" but 
+only if they represent Means or Standard Deviations
+since these are the only features we are interested in transform 2
+  Reading "features.txt" and extracting only the mean and standard deviation
+<!-- > dataFeatMeanStd <- grep("mean\\(\\)|std\\(\\)",dataFeatures$featureName,value=TRUE) #var name -->
+
+
+# Transformation steps to convert raw dataTable etc into Tidydata
+ Major Groups of Transformations are adessed by numbering the Transform
+ I have qualified each Tansform(group) by adding <additive>  or <reduction> to it
+ 
+ 
+## 1. Transform <additive>   merge Test and Train data into a single table at this step we relable V1 eg. "subject"
+This is done by rbind and setnames to read these attributes from attr table
+
+for both Activity and Subject files this will merge the training and the test sets by row binding and rename variables "subject" and "activityNum"
+> alldataSub <- rbind(dataSubTrain, dataSubTest)
+> setnames(alldataSub, "V1", "subject")
+> alldataAct<- rbind(dataActTrain, dataActTest)
+> setnames(alldataAct, "V1", "activityNum")
+
+also the feature/measurement tables dataTrain and dataTest are merged by rbind
+combine the DATA training and test files
+> dataTable <- rbind(dataTrain, dataTest)
+
+dataTable colnames,  here relabeling is done by using file data features  stored in      dataFeatures
+name variables according to feature e.g.(V1 = "tBodyAcc-mean()-X")
+
+> setnames(dataFeatures, names(dataFeatures), c("featureNum", "featureName"))
+> colnames(dataTable) <- dataFeatures$featureName
+
+activityLabes $activityName
+column names for activity labels
+> activityLabels<- tbl_df(read.table(file.path(filesPath, "activity_labels.txt")))
+> setnames(activityLabels, names(activityLabels), c("activityNum","activityName"))
+
+create new table alldataSubjAct  by cbind alldataSub and alldataAct
+Merge columns
+> alldataSubjAct<- cbind(alldataSub, alldataAct)
+
+Cbind this "alldataSubjAct" into dataTable to enable required Mean calculation
+> dataTable <- cbind(alldataSubjAct, dataTable)
+
+  
+##  2. Transform <additive> is adding subject and activityNum to dataFeatMeanStd
+###  2.1 building the vektor
+  
+
+> dataFeatMeanStd <- grep("mean\\(\\)|std\\(\\)",dataFeatures$featureName,value=TRUE) #var name  
+
+> str(dataFeatMeanStd)
+  chr [1:66] "tBodyAcc-mean()-X" "tBodyAcc-mean()-Y" "tBodyAcc-mean()-Z" "tBodyAcc-std()-X" "tBodyAcc-std()-Y" "tBodyAcc-std()-Z" "tGravityAcc-mean()-X" "tGravityAcc-mean()-Y" ...
+  
+> dataFeatMeanStd <- union(c("subject","activityNum"), dataFeatMeanStd)
+
+> str(dataFeatMeanStd)
+ chr [1:68] "subject" "activityNum" "tBodyAcc-mean()-X" "tBodyAcc-mean()-Y" "tBodyAcc-mean()-Z" "tBodyAcc-std()-X" "tBodyAcc-std()-Y" "tBodyAcc-std()-Z" "tGravityAcc-mean()-X" ...
+
+### 2.2 Transform <reduction> col dimension
+
+Taking only measurements for the mean and standard deviation and add "subject","activityNum"
+
+subsetting the data  by using the above constructed vector Transform 2.1
+
+> data<- subset(dataTable,select=dataFeatMeanStd)
+
+ 
+## 3. Transform <additive> merge activityName into data$activity from activityLables by activityNum 
+ 
+  enter name of activity into data
+> data <- merge(activityLabels, data , by="activityNum", all.x=TRUE)
+> data$activityName <- as.character(data$activityName)
+
+## 4. Transform <reduction> row dimension aggregates the data tables
+
+  create dataTable with variable means sorted by subject and Activity
+
+> dataAgg<- aggregate(. ~ subject - activityName, data = data, mean)
+> Tidydata<- tbl_df(arrange(dataAgg,subject,activityName))
+
+ls()
+filesPath <- "./UCI HAR Dataset"
+# Read subject files
+dataSubTrain <- tbl_df(read.table(file.path(filesPath, "train", "subject_train.txt")))
+dataSubTest  <- tbl_df(read.table(file.path(filesPath, "test" , "subject_test.txt" )))
+
+# Read activity files
+dataActTrain <- tbl_df(read.table(file.path(filesPath, "train", "Y_train.txt")))
+dataActTest  <- tbl_df(read.table(file.path(filesPath, "test" , "Y_test.txt" )))
+
+#Read data files.
+dataTrain <- tbl_df(read.table(file.path(filesPath, "train", "X_train.txt" )))
+dataTest  <- tbl_df(read.table(file.path(filesPath, "test" , "X_test.txt" )))
+
+# Reading features.txt
+dataFeatures <- tbl_df(read.table(file.path(filesPath, "features.txt")))
+
+# Reading features.txt and extracting only the mean and standard deviation
+ # dataFeatMeanStd <- grep("mean\\(\\)|std\\(\\)",dataFeatures$featureName,value=TRUE) #var name
+
+ls()
+
+# for both Activity and Subject files this will merge the training and the test sets by row binding
+#and rename variables "subject" and "activityNum"
+alldataSub <- rbind(dataSubTrain, dataSubTest)
+setnames(alldataSub, "V1", "subject")
+alldataAct<- rbind(dataActTrain, dataActTest)
+setnames(alldataAct, "V1", "activityNum")
+
+#combine the DATA training and test files
+dataTable <- rbind(dataTrain, dataTest)
+
+# name variables according to feature e.g.(V1 = "tBodyAcc-mean()-X")
+
+setnames(dataFeatures, names(dataFeatures), c("featureNum", "featureName"))
+colnames(dataTable) <- dataFeatures$featureName
+
+#column names for activity labels
+activityLabels<- tbl_df(read.table(file.path(filesPath, "activity_labels.txt")))
+setnames(activityLabels, names(activityLabels), c("activityNum","activityName"))
+
+# Merge columns
+alldataSubjAct<- cbind(alldataSub, alldataAct)
+dataTable <- cbind(alldataSubjAct, dataTable)
+
+# Taking only measurements for the mean and standard deviation and add "subject","activityNum"
+ dataFeatMeanStd <- grep("mean\\(\\)|std\\(\\)",dataFeatures$featureName,value=TRUE) #var name 
+ dim(dataFeatMeanStd)
+ dataFeatMeanStd <- union(c("subject","activityNum"), dataFeatMeanStd)
+ dim(dataFeatMeanStd)
+ data<- subset(dataTable,select=dataFeatMeanStd)
+ dim(data)
+##enter name of activity into data
+ data <- merge(activityLabels, data , by="activityNum", all.x=TRUE)
+ data$activityName <- as.character(data$activityName)
+ dim(data)
+## create dataTable with variable means sorted by subject and Activity
+ data$activityName <- as.character(data$activityName)
+ dataAgg<- aggregate(. ~ subject - activityName, data = data, mean)
+ dim(dataAgg)
+ Tidydata<- tbl_df(arrange(dataAgg,subject,activityName))
+ dim(Tidydata)
+###Names before
+   head(str(Tidydata),2)
+
+ names(Tidydata)<-gsub("std()", "SD", names(Tidydata))
+ names(Tidydata)<-gsub("mean()", "MEAN", names(Tidydata))
+ names(Tidydata)<-gsub("^t", "time", names(Tidydata))
+ names(Tidydata)<-gsub("^f", "frequency", names(Tidydata))
+ names(Tidydata)<-gsub("Acc", "Accelerometer", names(Tidydata))
+ names(Tidydata)<-gsub("Gyro", "Gyroscope", names(Tidydata))
+ names(Tidydata)<-gsub("Mag", "Magnitude", names(Tidydata))
+ names(Tidydata)<-gsub("BodyBody", "Body", names(Tidydata))
+### Names after
+  head(str(Tidydata),6)
+
+##write to text file on disk
+ write.table(Tidydata, "TidyData.txt", row.name=FALSE)
+
+
+End of Transforms now the R table Tidydata is stored in a file on the disk
+# write to text file on disk
+> write.table(Tidydata, "TidyData.txt", row.name=FALSE)
+
+
+
