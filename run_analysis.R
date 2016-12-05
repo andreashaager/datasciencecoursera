@@ -62,9 +62,9 @@ dataTable <- cbind(alldataSubjAct, dataTable)
 
 # Taking only measurements for the mean and standard deviation and add "subject","activityNum"
  dataFeatMeanStd <- grep("mean\\(\\)|std\\(\\)",dataFeatures$featureName,value=TRUE) #var name 
- dim(dataFeatMeanStd)
+ head(dataFeatMeanStd)
  dataFeatMeanStd <- union(c("subject","activityNum"), dataFeatMeanStd)
- dim(dataFeatMeanStd)
+ head(dataFeatMeanStd)
  data<- subset(dataTable,select=dataFeatMeanStd)
  dim(data)
 ##enter name of activity into data
@@ -74,7 +74,9 @@ dataTable <- cbind(alldataSubjAct, dataTable)
 ## create dataTable with variable means sorted by subject and Activity
  data$activityName <- as.character(data$activityName)
  dataAgg<- aggregate(. ~ subject - activityName, data = data, mean)
+## no of rows reflects 6 activities * 30 Subjects = 180 rows, 69 col as arranged earlier
  dim(dataAgg)
+
  Tidydata<- tbl_df(arrange(dataAgg,subject,activityName))
  dim(Tidydata)
 #Names before
