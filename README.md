@@ -5,11 +5,12 @@ The Anlysis performed by the attached Rscript "run_analysis.R" is using Smartpho
 
 http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones
 
-The outcome of the experiment ist the data for the project, it can be taken from here:
+The outcome of the experiment is the actual raw data of this Analysis project.
+The Raw data can be taken from here:
 
 https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
 
-Tasks and Goal of the Analysis and the Project:
+### Tasks and Goal of the Analysis and the Project:
 
 You should create one R script called run_analysis.R that does the following.
 
@@ -19,7 +20,7 @@ Uses descriptive activity names to name the activities in the data set
 Appropriately labels the data set with descriptive variable names.
 From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
 
-Here the REad me of the Raw data , .. brought along with the download file :
+### Here the REad me of the Raw data , .. brought along with the download file :
 
 
 ==================================================================
